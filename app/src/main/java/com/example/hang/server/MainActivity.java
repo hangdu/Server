@@ -12,15 +12,10 @@ import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
     ServerSocket server;
-    Socket client;
-    BufferedReader in;
-    PrintWriter out;
-    String line;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         try {
             server = new ServerSocket(12345);
         } catch (IOException e) {
@@ -31,38 +26,19 @@ public class MainActivity extends AppCompatActivity {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                try {
-                    client = server.accept();
-                } catch (IOException e) {
-                    System.out.println("Accept failed: 12345");
-                    System.exit(-1);
-                }
-
-                try {
-                    in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                    out = new PrintWriter(client.getOutputStream(), true);
-
-                } catch (IOException e) {
-                    System.out.println("Read failed");
-                    System.exit(-1);
-                }
-
                 while (true) {
+                    Socket socket;
                     try {
-                        line = in.readLine();
-                        //Send data back to client
-                        out.println("Hi, I got your message!");
+                        socket = server.accept();
+                        new Thread(new ClientWorker(socket)).start();
                     } catch (IOException e) {
-                        System.out.println("Read failed");
+                        System.out.println("Accept failed: 12345");
                         System.exit(-1);
                     }
                 }
             }
         };
         new Thread(runnable).start();
-
-
-
     }
 }
 
