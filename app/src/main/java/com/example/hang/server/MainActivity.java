@@ -4,7 +4,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -13,9 +16,8 @@ import java.net.Socket;
 public class MainActivity extends AppCompatActivity {
     ServerSocket server;
     Socket client;
-    BufferedReader in;
-    PrintWriter out;
-    String line;
+    DataInputStream in;
+    DataOutputStream out;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,14 +35,15 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 try {
                     client = server.accept();
+                    System.out.println("New client");
                 } catch (IOException e) {
                     System.out.println("Accept failed: 12345");
                     System.exit(-1);
                 }
 
                 try {
-                    in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                    out = new PrintWriter(client.getOutputStream(), true);
+                    in = new DataInputStream(client.getInputStream());
+                    out = new DataOutputStream(client.getOutputStream());
 
                 } catch (IOException e) {
                     System.out.println("Read failed");
@@ -49,9 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
                 while (true) {
                     try {
-                        line = in.readLine();
-                        //Send data back to client
-                        out.println("Hi, I got your message!");
+                        String messageFromClient = in.readUTF();
+                        System.out.println("I got message " + messageFromClient);
                     } catch (IOException e) {
                         System.out.println("Read failed");
                         System.exit(-1);
@@ -59,10 +61,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        new Thread(runnable).start();
-
-
-
+        Thread connectThread = new Thread(runnable);
+        connectThread.start();
     }
 }
 
