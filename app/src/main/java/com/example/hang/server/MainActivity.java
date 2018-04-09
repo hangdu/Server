@@ -9,9 +9,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     ServerSocket server;
+    private static final int NTHREADS = 5;
+    private static final Executor exec = Executors.newFixedThreadPool(NTHREADS);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
                     Socket socket;
                     try {
                         socket = server.accept();
-                        new Thread(new ClientWorker(socket)).start();
+                        Runnable task = new ClientWorker(socket);
+                        exec.execute(task);
                     } catch (IOException e) {
                         System.out.println("Accept failed: 12345");
                         System.exit(-1);
