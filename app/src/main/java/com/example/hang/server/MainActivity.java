@@ -20,13 +20,11 @@ public class MainActivity extends AppCompatActivity {
     Socket client;
     Worker worker;
     Button btn_startCollect;
-    Button btn_stop;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btn_startCollect = (Button) findViewById(R.id.btn_startCollect);
-        btn_stop = (Button) findViewById(R.id.btn_stop);
 
         try {
             server = new ServerSocket(12345);
@@ -46,15 +44,6 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println("Accept failed: 12345");
                     System.exit(-1);
                 }
-//                while (true) {
-//                    try {
-//                        String messageFromClient = in.readUTF();
-//                        System.out.println("I got message " + messageFromClient);
-//                    } catch (IOException e) {
-//                        System.out.println("Read failed");
-//                        System.exit(-1);
-//                    }
-//                }
             }
         };
         Thread connectThread = new Thread(runnable);
@@ -64,13 +53,14 @@ public class MainActivity extends AppCompatActivity {
         btn_startCollect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                worker.addCommand(1);
-            }
-        });
-        btn_stop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                worker.addCommand(0);
+                String buttonText = btn_startCollect.getText().toString();
+                if (buttonText.equals("Start to collect")) {
+                    worker.addCommand(1);
+                    btn_startCollect.setText("Stop");
+                } else {
+                    worker.addCommand(0);
+                    btn_startCollect.setText("Start to collect");
+                }
             }
         });
     }
