@@ -1,5 +1,8 @@
 package com.example.hang.server;
 
+import android.os.Handler;
+import android.os.Message;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -18,8 +21,10 @@ public class Worker {
     DataOutputStream out;
     Socket client;
     BlockingDeque<Integer> queue;
-    public Worker(Socket client) {
+    Handler handler;
+    public Worker(Socket client, Handler myHandler) {
         this.client = client;
+        handler = myHandler;
         queue = new LinkedBlockingDeque<>();
         try {
             in = new DataInputStream(client.getInputStream());
@@ -31,6 +36,7 @@ public class Worker {
         }
 
         new Thread(writeTask).start();
+        new Thread(readTask).start();
     }
 
     Runnable writeTask = new Runnable() {
@@ -51,6 +57,27 @@ public class Worker {
                     e.printStackTrace();
                 }
             }
+        }
+    };
+
+    Runnable readTask = new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    String message = in.readUTF();
+                    System.out.println("From Client : " + message);
+                    Message msg = Message.obtain();
+                    msg.what = 0;
+                    msg.obj = message;
+                    handler.sendMessage(msg);
+
+                } catch (IOException e) {
+                    System.out.println("Read failed");
+                    System.exit(-1);
+                }
+            }
+
         }
     };
 
