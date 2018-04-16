@@ -18,20 +18,26 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LabelDialog.LabelDialogListener {
     ServerSocket server;
     Socket client;
     Worker worker;
     Button btn_startCollect;
     TextView tv_status;
+    String label = null;
+    List<Integer> strengthList;
+
     Handler myHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message inputMessage) {
             // Gets the image task from the incoming Message object.
             if (inputMessage.what == 0) {
                 String str = inputMessage.obj.toString();
-                tv_status.setText(str);
+                tv_status.setText("RSSI = " + str);
+                strengthList.add(Integer.valueOf(str));
             } else {
                 tv_status.setText("");
             }
@@ -43,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         btn_startCollect = (Button) findViewById(R.id.btn_startCollect);
         tv_status = (TextView) findViewById(R.id.tv_status);
+        strengthList = new ArrayList<>();
 
         try {
             server = new ServerSocket(12345);
@@ -73,16 +80,45 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String buttonText = btn_startCollect.getText().toString();
                 if (buttonText.equals("Start to collect")) {
-                    worker.addCommand(1);
-                    btn_startCollect.setText("Stop");
+                    openDialog();
                 } else {
                     worker.addCommand(0);
                     btn_startCollect.setText("Start to collect");
-                    myHandler.sendEmptyMessage(1);
+
+                    //process strengthList
+                    double ave = getAvearge();
+                    tv_status.setText("Label="+label+";     aveRSSI="+ave);
+                    System.out.println("Label="+label+";aveRSSI="+ave);
                 }
             }
         });
     }
+
+    public void openDialog() {
+        LabelDialog labelDialog = new LabelDialog();
+        labelDialog.show(getSupportFragmentManager(), "label dialog");
+    }
+
+
+    @Override
+    public void applyText(String label) {
+        this.label = label;
+        tv_status.setText("label is " + label);
+        strengthList.clear();
+        worker.addCommand(1);
+        btn_startCollect.setText("Stop");
+    }
+
+
+    private double getAvearge() {
+        double res = 0;
+        for (int val : strengthList) {
+            res += val;
+        }
+        if (strengthList.size() == 0) {
+            return 0;
+        } else {
+            return res/strengthList.size();
+        }
+    }
 }
-
-
