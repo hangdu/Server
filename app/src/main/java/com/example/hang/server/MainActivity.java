@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -27,8 +28,11 @@ public class MainActivity extends AppCompatActivity implements LabelDialog.Label
     Worker worker;
     Button btn_startCollect;
     TextView tv_status;
+    private ListView listView;
     String label = null;
     List<Integer> strengthList;
+    private PositionAdapter positionAdapter;
+    private List<Position> list;
 
     Handler myHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -49,7 +53,11 @@ public class MainActivity extends AppCompatActivity implements LabelDialog.Label
         setContentView(R.layout.activity_main);
         btn_startCollect = (Button) findViewById(R.id.btn_startCollect);
         tv_status = (TextView) findViewById(R.id.tv_status);
+        listView = (ListView) findViewById(R.id.lv_label);
         strengthList = new ArrayList<>();
+        list = new ArrayList<>();
+        positionAdapter = new PositionAdapter(this, list);
+        listView.setAdapter(positionAdapter);
 
         try {
             server = new ServerSocket(12345);
@@ -89,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements LabelDialog.Label
                     double ave = getAvearge();
                     tv_status.setText("Label="+label+";     aveRSSI="+ave);
                     System.out.println("Label="+label+";aveRSSI="+ave);
+                    positionAdapter.add(new Position(label, ave));
                 }
             }
         });
